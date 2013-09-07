@@ -39,7 +39,7 @@ int alfred_client_request_data(struct globals *globals)
 	struct alfred_status_v0 *status;
 	struct alfred_tlv *tlv;
 	struct alfred_data *data;
-	int ret, len, data_len, i;
+	int ret, len, data_len, i, count;
 
 	if (unix_sock_open_client(globals, ALFRED_SOCK_PATH))
 		return -1;
@@ -59,6 +59,9 @@ int alfred_client_request_data(struct globals *globals)
 		fprintf(stderr, "%s: only wrote %d of %d bytes: %s\n",
 			__func__, ret, len, strerror(errno));
 
+	printf("{");
+
+	count = 0;
 	push = (struct alfred_push_data_v0 *)buf;
 	tlv = (struct alfred_tlv *)buf;
 	while ((ret = read(globals->unix_sock, buf, sizeof(*tlv))) > 0) {
@@ -98,9 +101,12 @@ int alfred_client_request_data(struct globals *globals)
 		if (ret < data_len)
 			break;
 
+		if (count > 0)
+			printf(",\n");
+
 		pos = data->data;
 
-		printf("{ \"%02x:%02x:%02x:%02x:%02x:%02x\", \"",
+		printf("\n  \"%02x:%02x:%02x:%02x:%02x:%02x\": \"",
 		       data->source[0], data->source[1],
 		       data->source[2], data->source[3],
 		       data->source[4], data->source[5]);
@@ -110,13 +116,17 @@ int alfred_client_request_data(struct globals *globals)
 			else if (pos[i] == '\\')
 				printf("\\\\");
 			else if (!isprint(pos[i]))
-				printf("\\x%02x", pos[i]);
+				printf("\\u00%02x", pos[i]);
 			else
 				printf("%c", pos[i]);
 		}
 
-		printf("\" },\n");
+		printf("\"");
+
+		count++;
 	}
+
+	printf("\n}\n");
 
 	unix_sock_close(globals);
 
