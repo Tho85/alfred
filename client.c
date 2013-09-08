@@ -29,6 +29,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <ctype.h>
+#include <jansson.h>
 #include "alfred.h"
 
 int alfred_client_request_data(struct globals *globals)
@@ -39,7 +40,8 @@ int alfred_client_request_data(struct globals *globals)
 	struct alfred_status_v0 *status;
 	struct alfred_tlv *tlv;
 	struct alfred_data *data;
-	int ret, len, data_len, i;
+	int ret, len, data_len;
+	json_t *root, *value;
 
 	if (unix_sock_open_client(globals, ALFRED_SOCK_PATH))
 		return -1;
@@ -58,6 +60,8 @@ int alfred_client_request_data(struct globals *globals)
 	if (ret != len)
 		fprintf(stderr, "%s: only wrote %d of %d bytes: %s\n",
 			__func__, ret, len, strerror(errno));
+
+	root = json_object();
 
 	push = (struct alfred_push_data_v0 *)buf;
 	tlv = (struct alfred_tlv *)buf;
@@ -100,29 +104,52 @@ int alfred_client_request_data(struct globals *globals)
 
 		pos = data->data;
 
-		printf("{ \"%02x:%02x:%02x:%02x:%02x:%02x\", \"",
+		char id[19];
+		sprintf(id, "%02x:%02x:%02x:%02x:%02x:%02x",
 		       data->source[0], data->source[1],
 		       data->source[2], data->source[3],
 		       data->source[4], data->source[5]);
-		for (i = 0; i < data_len; i++) {
-			if (pos[i] == '"')
-				printf("\\\"");
-			else if (pos[i] == '\\')
-				printf("\\\\");
-			else if (!isprint(pos[i]))
-				printf("\\x%02x", pos[i]);
-			else
-				printf("%c", pos[i]);
+
+		value = NULL;
+
+		/* Try parsing data as JSON. */
+		json_error_t error;
+		value = json_loadb((char*)pos, data_len, 0, &error);
+
+		if (value == NULL && memchr(pos, 0, data_len) == NULL) {
+			/* data was not JSON and there is no nullbyte in data.
+			 * Try expressing data as JSON string. */
+
+			char *tmp;
+			tmp = calloc(data_len, sizeof(char));
+			strncpy(tmp, (char*)pos, data_len);
+			value = json_string(tmp);
+			free(tmp);
 		}
 
-		printf("\" },\n");
+		if (value == NULL) {
+			/* Data could not be expressed as string.
+			 * Create an array of integers. */
+
+			value = json_array();
+			while(data_len--)
+				json_array_append_new(value, json_integer(*pos++));
+		}
+
+		json_object_set_new(root, id, value);
 	}
+
+	json_dumpf(root, stdout, JSON_INDENT(2));
+
+	json_decref(root);
 
 	unix_sock_close(globals);
 
 	return 0;
 
 recv_err:
+	json_decref(root);
+
 	/* read the rest of the status message */
 	ret = read(globals->unix_sock, buf + sizeof(*tlv),
 		   sizeof(*status) - sizeof(*tlv));

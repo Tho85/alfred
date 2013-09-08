@@ -28,6 +28,7 @@ Compilation
 alfred depends on:
  * librt (usually part of libc)
  * IPv6 support in the kernel/host system
+ * jansson (C library for working with JSON data)
 
 To compile alfred, simply type:
 
@@ -97,9 +98,24 @@ to 0 ('-V 0').
 After the hostname has been set on a few alfred hosts, the can be retrieved again:
 
  $ alfred -r 64
-{ "fe:f1:00:00:01:01", "OpenWRT-node-1\x0a" },
-{ "fe:f1:00:00:02:01", "OpenWRT-node-2\x0a" },
-{ "fe:f1:00:00:03:01", "OpenWRT-node-3\x0a" },
+{
+  "fe:f1:00:00:01:01": {
+    "hostname": "alfred",
+    "ip_address": [192, 168, 1, 23]
+  },
+  "fe:f1:00:00:02:01": "OpenWRT-node\n",
+  "fe:f1:00:00:03:01": [
+    0,
+    1,
+    255
+  ]
+}
+
+Values will be expressed as JSON objects, UTF-8 strings or byte arrays. First,
+alfred tries to interprete the data as a JSON object. If this succeeds, it'll
+set the value to the JSON object. If this fails, it'll try expressing the data
+as an UTF-8 string. As a last resort, the data will be expressed as an byte
+array.
 
 Note that the information must be periodically written again to alfred, otherwise
 it will timeout and alfred will forget about it (after 10 minutes).
