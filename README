@@ -97,9 +97,11 @@ to 0 ('-V 0').
 After the hostname has been set on a few alfred hosts, the can be retrieved again:
 
  $ alfred -r 64
-{ "fe:f1:00:00:01:01", "OpenWRT-node-1\x0a" },
-{ "fe:f1:00:00:02:01", "OpenWRT-node-2\x0a" },
-{ "fe:f1:00:00:03:01", "OpenWRT-node-3\x0a" },
+{
+  "fe:f1:00:00:01:01": "OpenWRT-node-1\u000a",
+  "fe:f1:00:00:02:01": "OpenWRT-node-2\u000a",
+  "fe:f1:00:00:03:01": "OpenWRT-node-3\u000a"
+}
 
 Note that the information must be periodically written again to alfred, otherwise
 it will timeout and alfred will forget about it (after 10 minutes).
