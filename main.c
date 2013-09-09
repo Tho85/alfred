@@ -69,17 +69,12 @@ static struct globals *alfred_init(int argc, char *argv[])
 		{NULL,		0,			NULL,	0},
 	};
 
-	globals = malloc(sizeof(*globals));
+	globals = calloc(1, sizeof(*globals));
 	if (!globals)
 		return NULL;
 
-	memset(globals, 0, sizeof(*globals));
-
 	globals->opmode = OPMODE_SLAVE;
 	globals->clientmode = CLIENT_NONE;
-	globals->interface = NULL;
-	globals->best_server = NULL;
-	globals->clientmode_version = 0;
 
 	time_random_seed();
 
