@@ -80,7 +80,6 @@ static struct globals *alfred_init(int argc, char *argv[])
 	globals->interface = NULL;
 	globals->best_server = NULL;
 	globals->clientmode_version = 0;
-	globals->mesh_iface = "bat0";
 
 	time_random_seed();
 
@@ -134,6 +133,9 @@ static struct globals *alfred_init(int argc, char *argv[])
 		}
 	}
 
+	if (globals->mesh_iface == NULL)
+		globals->mesh_iface = strdup("bat0");
+
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 		fprintf(stderr, "could not register SIGPIPE handler\n");
 	return globals;
@@ -142,6 +144,7 @@ static struct globals *alfred_init(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	struct globals *globals;
+	int ret;
 
 	globals = alfred_init(argc, argv);
 
@@ -150,15 +153,21 @@ int main(int argc, char *argv[])
 
 	switch (globals->clientmode) {
 	case CLIENT_NONE:
-		return alfred_server(globals);
+		ret = alfred_server(globals);
 		break;
 	case CLIENT_REQUEST_DATA:
-		return alfred_client_request_data(globals);
+		ret = alfred_client_request_data(globals);
 		break;
 	case CLIENT_SET_DATA:
-		return alfred_client_set_data(globals);
+		ret = alfred_client_set_data(globals);
 		break;
+	default:
+		ret = 0;
 	}
 
-	return 0;
+	free(globals->interface);
+	free(globals->mesh_iface);
+	free(globals);
+
+	return ret;
 }
