@@ -1,0 +1,8 @@
+# Defaults for alfred initscript
+
+#
+# This is a POSIX shell fragment
+#
+
+# Additional options that are passed to the Daemon.
+DAEMON_OPTS="-i eth0 -b bat0 -m"

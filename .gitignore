@@ -1,0 +1,4 @@
+/.vagrant
+/debian/alfred
+/debian/*.log
+/debian/*.debhelper

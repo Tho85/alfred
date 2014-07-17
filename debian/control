@@ -1,0 +1,19 @@
+Source: alfred
+Section: unknown
+Priority: optional
+Maintainer: Thomas Hollstegge <thomas.hollstegge@gmail.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: https://github.com/FreiFunkMuenster/alfred
+Vcs-Git: git://github.com/FreiFunkMuenster/alfred.git
+Vcs-Browser: https://github.com/FreiFunkMuenster/alfred
+
+Package: alfred
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A.L.F.R.E.D - Almighty Lightweight Fact Remote Exchange Daemon
+ alfred is a user space daemon for distributing arbitrary local information over
+ the mesh/network in a decentralized fashion. This data can be anything which
+ appears to be useful - originally designed to replace the batman-adv
+ visualization (vis), you may distribute hostnames, phone books, administration
+ information, DNS information, the local weather forecast ...
